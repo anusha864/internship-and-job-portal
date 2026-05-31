@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Internship and jobs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Internship & Jobs Portal</h1>
+    </div>
+
+    <div class="top-buttons">
+        <button onclick="loadStudents()">
+            View Students
+        </button>
+
+        <button onclick="loadJobs()">
+            View Jobs
+        </button>
+
+        <button onclick="loadApplications()">
+            Applications
+        </button>
+    </div>
+
+    <div class="grid">
+
+        <div class="card">
+
+            <h2>Register Student</h2>
+
+            <input
+                id="name"
+                placeholder="Name">
+
+            <input
+                id="email"
+                placeholder="Email">
+
+            <input
+                id="branch"
+                placeholder="Branch">
+
+            <input
+                id="skills"
+                placeholder="Skills">
+
+            <input
+                type="file"
+                id="resume">
+
+            <button onclick="register()">
+                Register
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <h2>
+                Add Job / Internship
+            </h2>
+
+            <input
+                id="title"
+                placeholder="Title">
+
+            <input
+                id="company"
+                placeholder="Company">
+
+            <select id="type">
+                <option>
+                    Job
+                </option>
+
+                <option>
+                    Internship
+                </option>
+            </select>
+
+            <button onclick="addJob()">
+                Add Job
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Results</h2>
+
+            <div id="output"></div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+- name: Deploy Internship Portal
+  hosts: ec2
+  become: yes
+
+  tasks:
+    - name: Pull latest code
+      git:
+        repo: "https://github.com/Poojamanaguli26/Intership-portal.git"
+        dest: /app
+
+    - name: Install backend dependencies
+      shell: cd /app/backend && npm install
+
+    - name: Start backend
+      shell: cd /app/backend && nohup node server.js &

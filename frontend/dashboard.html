@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+</head>
+<body>
+
+<h2>Welcome Student Dashboard</h2>
+
+<button onclick="loadJobs()">Load Jobs</button>
+<button onclick="loadApplications()">View Applications</button>
+
+<div id="jobs"></div>
+<div id="applications"></div>
+
+<script src="script.js"></script>
+
+<script>
+    // show logged-in user
+    const student = JSON.parse(localStorage.getItem("student"));
+
+    if (!student) {
+        alert("Please login first");
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>
