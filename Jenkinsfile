@@ -15,7 +15,13 @@ pipeline {
 
     stages {
 
-        stage('📋 Checkout Code') {
+        stage('Hello') {
+            steps {
+                echo 'Jenkins is working successfully ✓'
+            }
+        }
+
+        stage('Checkout Code') {
             steps {
                 echo '========== Cloning repository =========='
                 git branch: "${BRANCH}", url: "${GITHUB_REPO}"
@@ -23,7 +29,7 @@ pipeline {
             }
         }
 
-        stage('🔍 Validate Configuration') {
+        stage('Validate Configuration') {
             steps {
                 echo '========== Validating docker-compose.yml =========='
                 sh '${DOCKER_COMPOSE_CMD} config > /dev/null && echo "✓ docker-compose.yml is valid"'
@@ -36,7 +42,7 @@ pipeline {
             }
         }
 
-        stage('🏗️ Build Docker Images') {
+        stage('Build Docker Images') {
             steps {
                 echo '========== Building Docker images =========='
                 sh '${DOCKER_COMPOSE_CMD} build --no-cache'
@@ -44,7 +50,7 @@ pipeline {
             }
         }
 
-        stage('🚀 Deploy Services') {
+        stage('Deploy Services') {
             steps {
                 echo '========== Stopping old containers =========='
                 sh '${DOCKER_COMPOSE_CMD} down -v || true'
@@ -57,7 +63,7 @@ pipeline {
             }
         }
 
-        stage('⏳ Wait for Services') {
+        stage('Wait for Services') {
             steps {
                 echo '========== Waiting for services to be ready =========='
                 sh 'sleep 15'
@@ -75,7 +81,7 @@ pipeline {
             }
         }
 
-        stage('✅ Smoke Tests') {
+        stage('Smoke Tests') {
             steps {
                 echo '========== Running smoke tests =========='
                 sh '''
