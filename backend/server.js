@@ -1,4 +1,7 @@
+// Backend server for the Internship & Placement Portal
+// This file initializes express, S3 configurations, SQLite database connections, and all the REST APIs.
 require("dotenv").config();
+
 
 const express = require("express");
 const cors = require("cors");
