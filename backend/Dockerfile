@@ -4,8 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# IMPORTANT FIX
-RUN npm install --build-from-source sqlite3
+RUN npm install --build-from-source
 
 COPY . .
 

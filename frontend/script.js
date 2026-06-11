@@ -1,6 +1,22 @@
 const API = "http://localhost:5000";
 
 const output = document.getElementById("output");
+const statusBox = document.getElementById("status");
+const applicationsSection = document.getElementById("applications");
+
+function showStatus(message, type = "info") {
+    if (!statusBox) return;
+    statusBox.innerHTML = `
+        <div class="status ${type}">
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function clearStatus() {
+    if (!statusBox) return;
+    statusBox.innerHTML = "";
+}
 
 /* ================= REGISTER ================= */
 async function register() {
@@ -45,6 +61,17 @@ async function register() {
         const data = await res.json();
 
         alert(data.message);
+
+        if (data.studentId) {
+            localStorage.setItem(
+                "student",
+                JSON.stringify({
+                    id: data.studentId,
+                    name: document.getElementById("name").value,
+                    email: document.getElementById("email").value
+                })
+            );
+        }
 
         document.getElementById("name").value = "";
         document.getElementById("email").value = "";
@@ -155,12 +182,15 @@ async function loadStudents() {
 async function loadJobs() {
 
     try {
+        showStatus("Loading jobs...", "info");
 
         const res =
             await fetch(`${API}/jobs`);
 
         const jobs =
             await res.json();
+
+        clearStatus();
 
         output.innerHTML = `
         <div class="row">
@@ -178,7 +208,7 @@ async function loadJobs() {
                     </p>
 
                     <button
-                        onclick="applyJob(1,${job.id})"
+                        onclick="applyJob(${job.id})"
                     >
                         Apply
                     </button>
@@ -191,17 +221,24 @@ async function loadJobs() {
     } catch (err) {
 
         console.log(err);
-        alert("Failed to load jobs");
+        showStatus("Failed to load jobs", "error");
     }
 }
 
 /* ================= APPLY ================= */
-async function applyJob(
-    student_id,
-    job_id
-) {
+async function applyJob(job_id) {
 
     try {
+        const student = JSON.parse(
+            localStorage.getItem("student")
+        );
+
+        if (!student || !student.id) {
+            alert(
+                "Please register a student first before applying."
+            );
+            return;
+        }
 
         const res =
             await fetch(`${API}/apply`, {
@@ -211,7 +248,7 @@ async function applyJob(
                         "application/json"
                 },
                 body: JSON.stringify({
-                    student_id,
+                    student_id: student.id,
                     job_id
                 })
             });
@@ -219,10 +256,28 @@ async function applyJob(
         const data =
             await res.json();
 
-        alert(data.message);
+        if (!res.ok) {
+            throw new Error(data.message || "Failed to apply");
+        }
+
+        showStatus("Application submitted successfully.", "success");
+
+        const resultContainer =
+            applicationsSection || output;
+
+        resultContainer.innerHTML = `
+            <div class="box blue">
+                <h3>${data.message}</h3>
+                <p>Your application has been submitted.</p>
+            </div>
+        `;
+
+        // Refresh application results after applying
+        await loadApplications();
 
     } catch (err) {
         console.log(err);
+        alert("Failed to apply for job");
     }
 }
 
@@ -230,16 +285,44 @@ async function applyJob(
 async function loadApplications() {
 
     try {
+        showStatus("Loading applications...", "info");
 
         const res =
             await fetch(
                 `${API}/applications`
             );
 
+        const applicationsContainer = applicationsSection || output;
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            applicationsContainer.innerHTML = `
+                <div class="box purple">
+                    <h3>Error loading applications</h3>
+                    <p>${errorText || "Please check backend status."}</p>
+                </div>
+            `;
+            showStatus("Failed to load applications", "error");
+            return;
+        }
+
         const data =
             await res.json();
 
-        output.innerHTML = `
+        if (!data || data.length === 0) {
+            applicationsContainer.innerHTML = `
+                <div class="box purple">
+                    <h3>No applications found</h3>
+                    <p>Apply for a job and then click Applications again.</p>
+                </div>
+            `;
+            showStatus("No applications found.", "info");
+            return;
+        }
+
+        clearStatus();
+
+        applicationsContainer.innerHTML = `
         <div class="row">
             ${data.map(app => `
                 <div class="box purple">
@@ -264,6 +347,13 @@ async function loadApplications() {
         `;
 
     } catch (err) {
+        const applicationsContainer = document.getElementById("applications") || output;
         console.log(err);
+        applicationsContainer.innerHTML = `
+            <div class="box purple">
+                <h3>Error loading applications</h3>
+                <p>${err.message || "Request failed."}</p>
+            </div>
+        `;
     }
 }

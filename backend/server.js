@@ -6,6 +6,7 @@ const sqlite3 = require("sqlite3").verbose();
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const AWS = require("aws-sdk");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
@@ -16,6 +17,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const uploadDirectory = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDirectory)) {
+    fs.mkdirSync(uploadDirectory, { recursive: true });
+}
+app.use("/uploads", express.static(uploadDirectory));
 
 // Prometheus metrics
 const client = require('prom-client');
@@ -127,34 +134,33 @@ CREATE TABLE IF NOT EXISTS applications (
 /* ==========================
    FILE UPLOAD TO AWS S3
 ========================== */
-const upload = multer({
+const localStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDirectory);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
 
-    storage: multerS3({
+const useS3 =
+    process.env.S3_BUCKET_NAME &&
+    process.env.AWS_ACCESS_KEY_ID &&
+    process.env.AWS_SECRET_ACCESS_KEY &&
+    process.env.AWS_REGION;
 
+const storage = useS3
+    ? multerS3({
         s3: s3,
-
-        bucket:
-            process.env.S3_BUCKET_NAME,
-
-        acl:
-            "public-read",
-
-        key: function (
-            req,
-            file,
-            cb
-        ) {
-
-            cb(
-                null,
-
-                Date.now() +
-                "-" +
-                file.originalname
-            );
+        bucket: process.env.S3_BUCKET_NAME,
+        acl: "public-read",
+        key: function (req, file, cb) {
+            cb(null, Date.now() + "-" + file.originalname);
         }
     })
-});
+    : localStorage;
+
+const upload = multer({ storage });
 
 /* ==========================
    HOME ROUTE
@@ -186,7 +192,7 @@ app.post(
 
             const resume =
                 req.file
-                    ? req.file.location
+                    ? req.file.location || req.file.path
                     : null;
 
             if (
@@ -525,6 +531,37 @@ app.get(
 /* ==========================
    SERVER
 ========================== */
+// Debug route: dump DB tables (students, jobs, applications)
+app.get('/debug/db', async (req, res) => {
+    const query = (sql) => new Promise((resolve, reject) => {
+        db.all(sql, [], (err, rows) => {
+            if (err) return reject(err);
+            resolve(rows);
+        });
+    });
+
+    try {
+        const students = await query('SELECT * FROM students');
+        const jobs = await query('SELECT * FROM jobs');
+        const applications = await query(`
+            SELECT
+                applications.id,
+                students.id as student_id,
+                students.name,
+                jobs.id as job_id,
+                jobs.title,
+                jobs.company
+            FROM applications
+            JOIN students ON students.id = applications.student_id
+            JOIN jobs ON jobs.id = applications.job_id
+        `);
+
+        res.json({ students, jobs, applications });
+    } catch (err) {
+        res.status(500).json({ error: err.message || String(err) });
+    }
+});
+
 app.listen(
     process.env.PORT || 5000,
     "0.0.0.0",

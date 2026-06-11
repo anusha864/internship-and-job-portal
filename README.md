@@ -31,6 +31,11 @@ A full-stack Internship and Placement Portal built using Node.js, Express, SQLit
 - Docker
 - Docker Compose
 
+## Deployment Notes
+
+- The backend requires `backend/.env` on the host because Docker Compose loads `env_file: ./backend/.env`.
+- Copy `backend/.env.example` to `backend/.env` and fill in your AWS and app values before starting on EC2.
+
 ## Project Structure
 
 ```txt

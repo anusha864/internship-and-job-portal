@@ -1,0 +1,58 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Automated CI/CD for Internship Portal - Freestyle Job (no plugins required)</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.38.3">
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@5.4.6">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/anusha864/internship-and-job-portal.git</url>
+        <credentialsId></credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/main</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="empty-list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>echo "Starting Docker Compose deployment..."
+docker compose down -v || true
+docker compose build
+docker compose up -d
+echo ""
+echo "Waiting for services to start..."
+sleep 15
+echo ""
+echo "Service Status:"
+docker compose ps
+echo ""
+echo "Backend health check:"
+curl -s http://localhost:5000/ || echo "Backend not ready yet"
+echo ""
+echo "Frontend health check:"
+curl -s http://localhost:3000/ || echo "Frontend not ready yet"
+</command>
+      <configuredLocalRules/>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
